@@ -1,0 +1,82 @@
+name: 'Datadog Synthetics CI'
+description: 'Run Datadog Synthetics CI tests as part of your Github Actions workflow'
+author: 'step-security'
+inputs:
+  api-key:
+    required: true
+    description: 'Your Datadog API key.'
+  app-key:
+    required: true
+    description: 'Your Datadog application key.'
+  batch-timeout:
+    required: false
+    description: 'Specifies the timeout duration in milliseconds for the CI batch.'
+  config-path:
+    required: false
+    description: 'The path to the global configuration file that configures datadog-ci.'
+  datadog-site:
+    required: false
+    description: 'Your Datadog site.'
+  fail-on-critical-errors:
+    required: false
+    description: 'Fail the CI job if a critical error that is typically transient occurs, such as rate limits, authentication failures, or Datadog infrastructure issues.'
+  fail-on-missing-tests:
+    required: false
+    description: 'Fail the CI job if the list of tests to run is empty or if some explicitly listed tests are missing.'
+  fail-on-timeout:
+    required: false
+    description: 'Fail the CI job if the CI batch fails as timed out.'
+  files:
+    required: false
+    description: 'Glob patterns to detect Synthetic test configuration files, separated by new lines.'
+  junit-report:
+    required: false
+    description: 'The filename for a JUnit report if you want to generate one.'
+  locations:
+    required: false
+    description: 'Override the list of locations to run the test from, separated by new lines or commas.'
+  public-ids:
+    required: false
+    description: 'Public IDs of Synthetic tests to run, separated by new lines or commas. If no value is provided, tests are discovered in Synthetic test configuration files.'
+  selective-rerun:
+    required: false
+    description: Whether to only rerun failed tests for a given commit.
+  subdomain:
+    required: false
+    description: 'The custom subdomain to access your Datadog organization.'
+  test-search-query:
+    required: false
+    description: 'Use a search query to select which Synthetic tests to run.'
+  tunnel:
+    required: false
+    description: 'Use the Continuous Testing tunnel to launch tests against internal environments.'
+    default: 'false'
+  variables:
+    required: false
+    description: 'Override existing or inject new local and global variables in Synthetic tests as key-value pairs, separated by new lines or commas. For example: `START_URL=https://example.org,MY_VARIABLE=My title`.'
+
+outputs:
+  batch-url:
+    description: 'The URL of the CI batch.'
+  critical-errors-count:
+    description: 'The number of critical errors that occurred during the CI batch.'
+  failed-count:
+    description: 'The number of results that failed during the CI batch.'
+  failed-non-blocking-count:
+    description: 'The number of results that failed during the CI batch without blocking the CI.'
+  passed-count:
+    description: 'The number of results that passed during the CI batch.'
+  previously-passed-count:
+    description: 'The number of results that already passed in previous CI batches on the same commit.'
+  tests-not-found-count:
+    description: 'The number of tests that could not be found when starting the CI batch.'
+  tests-skipped-count:
+    description: 'The number of tests that were skipped when starting the CI batch.'
+  timed-out-count:
+    description: 'The number of results that failed due to the CI batch timing out.'
+  raw-results:
+    description: 'The `synthetics.Result[]` array, as a JSON-encoded string.'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
