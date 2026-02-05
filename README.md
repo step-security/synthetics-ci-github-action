@@ -1,0 +1,1 @@
+# synthetics-ci-github-action
