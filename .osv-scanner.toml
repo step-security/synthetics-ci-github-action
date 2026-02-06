@@ -1,3 +1,0 @@
-[[IgnoredVulns]]
-id = "MAL-2022-2353"
-reason = "False positive - this is our local workspace package"
