@@ -1,0 +1,11 @@
+[[IgnoredVulns]]
+id = "MAL-2022-2353"
+reason = "False positive - this is our local workspace package"
+
+[[IgnoredVulns]]
+id = "GHSA-968p-4wvh-cqc8"
+reason = "Transitive dep of jest, no production impact"
+
+[[IgnoredVulns]]
+id = "GHSA-v6h2-p8h4-qcjw"
+reason = "Transitive dep of ESLint → brace-expansion, no production impact"
