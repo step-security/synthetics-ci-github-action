@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import {getReporter, resolveConfig} from './resolve-config'
-import {synthetics} from '@datadog/datadog-ci'
+import * as synthetics from '@datadog/datadog-ci-plugin-synthetics'
 import axios, {isAxiosError} from 'axios'
 
 async function validateSubscription(): Promise<void> {
