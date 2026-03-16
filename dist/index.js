@@ -21615,8 +21615,11 @@ const fsStat = (0, util_1.promisify)(fs_1.stat);
 const fsOpen = (0, util_1.promisify)(fs_1.open);
 const fsClose = (0, util_1.promisify)(fs_1.close);
 const fsUnlink = (0, util_1.promisify)(fs_1.unlink);
-const LIST_COMMANDS_DEFAULT = ["LIST -a", "LIST"];
-const LIST_COMMANDS_MLSD = ["MLSD", "LIST -a", "LIST"];
+const defaultClientOptions = {
+    allowSeparateTransferHost: true
+};
+const LIST_COMMANDS_DEFAULT = () => ["LIST -a", "LIST"];
+const LIST_COMMANDS_MLSD = () => ["MLSD", "LIST -a", "LIST"];
 /**
  * High-level API to interact with an FTP server.
  */
@@ -21626,10 +21629,13 @@ class Client {
      *
      * @param timeout  Timeout in milliseconds, use 0 for no timeout. Optional, default is 30 seconds.
      */
-    constructor(timeout = 30000) {
-        this.availableListCommands = LIST_COMMANDS_DEFAULT;
+    constructor(timeout = 30000, options = defaultClientOptions) {
+        this.availableListCommands = LIST_COMMANDS_DEFAULT();
         this.ftp = new FtpContext_1.FTPContext(timeout);
-        this.prepareTransfer = this._enterFirstCompatibleMode([transfer_1.enterPassiveModeIPv6, transfer_1.enterPassiveModeIPv4]);
+        this.prepareTransfer = this._enterFirstCompatibleMode([
+            transfer_1.enterPassiveModeIPv6,
+            options.allowSeparateTransferHost ? transfer_1.enterPassiveModeIPv4 : transfer_1.enterPassiveModeIPv4_forceControlHostIP
+        ]);
         this.parseList = parseList_1.parseList;
         this._progressTracker = new ProgressTracker_1.ProgressTracker();
     }
@@ -21777,7 +21783,7 @@ class Client {
         // Use MLSD directory listing if possible. See https://tools.ietf.org/html/rfc3659#section-7.8:
         // "The presence of the MLST feature indicates that both MLST and MLSD are supported."
         const supportsMLSD = features.has("MLST");
-        this.availableListCommands = supportsMLSD ? LIST_COMMANDS_MLSD : LIST_COMMANDS_DEFAULT;
+        this.availableListCommands = supportsMLSD ? LIST_COMMANDS_MLSD() : LIST_COMMANDS_DEFAULT();
         await this.send("TYPE I"); // Binary mode
         await this.sendIgnoringError("STRU F"); // Use file structure
         await this.sendIgnoringError("OPTS UTF8 ON"); // Some servers expect UTF-8 to be enabled explicitly and setting before login might not have worked.
@@ -22127,10 +22133,13 @@ class Client {
     async removeDir(remoteDirPath) {
         return this._exitAtCurrentDirectory(async () => {
             await this.cd(remoteDirPath);
+            // Get the absolute path of the target because remoteDirPath might be a relative path, even `../` is possible.
+            const absoluteDirPath = await this.pwd();
             await this.clearWorkingDir();
-            if (remoteDirPath !== "/") {
+            const dirIsRoot = absoluteDirPath === "/";
+            if (!dirIsRoot) {
                 await this.cdup();
-                await this.removeEmptyDir(remoteDirPath);
+                await this.removeEmptyDir(absoluteDirPath);
             }
         });
     }
@@ -22209,6 +22218,12 @@ class Client {
     async _downloadFromWorkingDir(localDirPath) {
         await ensureLocalDirectory(localDirPath);
         for (const file of await this.list()) {
+            const hasInvalidName = !file.name || (0, path_1.basename)(file.name) !== file.name;
+            if (hasInvalidName) {
+                const safeName = JSON.stringify(file.name);
+                this.ftp.log(`Invalid filename from server listing, will skip file. (${safeName})`);
+                continue;
+            }
             const localPath = (0, path_1.join)(localDirPath, file.name);
             if (file.isDirectory) {
                 await this.cd(file.name);
@@ -22289,7 +22304,7 @@ class Client {
                 try {
                     const res = await strategy(ftp);
                     ftp.log("Optimal transfer strategy found.");
-                    this.prepareTransfer = strategy; // eslint-disable-line require-atomic-updates
+                    this.prepareTransfer = strategy;
                     return res;
                 }
                 catch (err) {
@@ -22347,7 +22362,7 @@ async function ensureLocalDirectory(path) {
     try {
         await fsStat(path);
     }
-    catch (err) {
+    catch (_a) {
         await fsMkDir(path, { recursive: true });
     }
 }
@@ -22355,7 +22370,7 @@ async function ignoreError(func) {
     try {
         return await func();
     }
-    catch (err) {
+    catch (_a) {
         // Ignore
         return undefined;
     }
@@ -22377,7 +22392,7 @@ var FileType;
     FileType[FileType["File"] = 1] = "File";
     FileType[FileType["Directory"] = 2] = "Directory";
     FileType[FileType["SymbolicLink"] = 3] = "SymbolicLink";
-})(FileType = exports.FileType || (exports.FileType = {}));
+})(FileType || (exports.FileType = FileType = {}));
 /**
  * Describes a file, directory or symbolic link.
  */
@@ -22454,12 +22469,12 @@ class FileInfo {
         this.rawModifiedAt = rawModifiedAt;
     }
 }
+exports.FileInfo = FileInfo;
 FileInfo.UnixPermission = {
     Read: 4,
     Write: 2,
     Execute: 1
 };
-exports.FileInfo = FileInfo;
 
 
 /***/ }),
@@ -22799,16 +22814,14 @@ class FTPContext {
         this._closeSocket(this._socket);
     }
     /**
-     * Close a socket. Sends FIN and ignores any error.
+     * Close a socket, ignores any error.
      * @protected
      */
     _closeSocket(socket) {
         if (socket) {
             this._removeSocketListeners(socket);
             socket.on("error", doNothing);
-            socket.on("timeout", () => socket.destroy());
-            socket.setTimeout(this.timeout);
-            socket.end();
+            socket.destroy();
         }
     }
     /**
@@ -23002,7 +23015,10 @@ Object.defineProperty(exports, "enterPassiveModeIPv6", ({ enumerable: true, get:
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ipIsPrivateV4Address = exports.upgradeSocket = exports.describeAddress = exports.describeTLS = void 0;
+exports.describeTLS = describeTLS;
+exports.describeAddress = describeAddress;
+exports.upgradeSocket = upgradeSocket;
+exports.ipIsPrivateV4Address = ipIsPrivateV4Address;
 const tls_1 = __nccwpck_require__(24404);
 /**
  * Returns a string describing the encryption on a given socket instance.
@@ -23014,7 +23030,6 @@ function describeTLS(socket) {
     }
     return "No encryption";
 }
-exports.describeTLS = describeTLS;
 /**
  * Returns a string describing the remote address of a socket.
  */
@@ -23024,7 +23039,6 @@ function describeAddress(socket) {
     }
     return `${socket.remoteAddress}:${socket.remotePort}`;
 }
-exports.describeAddress = describeAddress;
 /**
  * Upgrade a socket connection with TLS.
  */
@@ -23048,7 +23062,6 @@ function upgradeSocket(socket, options) {
         });
     });
 }
-exports.upgradeSocket = upgradeSocket;
 /**
  * Returns true if an IP is a private address according to https://tools.ietf.org/html/rfc1918#section-3.
  * This will handle IPv4-mapped IPv6 addresses correctly but return false for all other IPv6 addresses.
@@ -23066,7 +23079,6 @@ function ipIsPrivateV4Address(ip = "") {
         || (octets[0] === 192 && octets[1] === 168) // 192.168.0.0 - 192.168.255.255
         || ip === "127.0.0.1";
 }
-exports.ipIsPrivateV4Address = ipIsPrivateV4Address;
 
 
 /***/ }),
@@ -23077,7 +23089,11 @@ exports.ipIsPrivateV4Address = ipIsPrivateV4Address;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.positiveIntermediate = exports.positiveCompletion = exports.isMultiline = exports.isSingleLine = exports.parseControlResponse = void 0;
+exports.parseControlResponse = parseControlResponse;
+exports.isSingleLine = isSingleLine;
+exports.isMultiline = isMultiline;
+exports.positiveCompletion = positiveCompletion;
+exports.positiveIntermediate = positiveIntermediate;
 const LF = "\n";
 /**
  * Parse an FTP control response as a collection of messages. A message is a complete
@@ -23116,29 +23132,24 @@ function parseControlResponse(text) {
     const rest = tokenRegex ? lines.slice(startAt).join(LF) + LF : "";
     return { messages, rest };
 }
-exports.parseControlResponse = parseControlResponse;
 function isSingleLine(line) {
     return /^\d\d\d(?:$| )/.test(line);
 }
-exports.isSingleLine = isSingleLine;
 function isMultiline(line) {
     return /^\d\d\d-/.test(line);
 }
-exports.isMultiline = isMultiline;
 /**
  * Return true if an FTP return code describes a positive completion.
  */
 function positiveCompletion(code) {
     return code >= 200 && code < 300;
 }
-exports.positiveCompletion = positiveCompletion;
 /**
  * Return true if an FTP return code describes a positive intermediate response.
  */
 function positiveIntermediate(code) {
     return code >= 300 && code < 400;
 }
-exports.positiveIntermediate = positiveIntermediate;
 function isNotBlank(str) {
     return str.trim() !== "";
 }
@@ -23167,15 +23178,25 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.parseList = void 0;
+exports.parseList = parseList;
 const dosParser = __importStar(__nccwpck_require__(96199));
 const unixParser = __importStar(__nccwpck_require__(92622));
 const mlsdParser = __importStar(__nccwpck_require__(48157));
@@ -23219,7 +23240,6 @@ function parseList(rawList) {
         .filter((info) => info !== undefined);
     return parser.transformList(files);
 }
-exports.parseList = parseList;
 
 
 /***/ }),
@@ -23230,7 +23250,9 @@ exports.parseList = parseList;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.transformList = exports.parseLine = exports.testLine = void 0;
+exports.testLine = testLine;
+exports.parseLine = parseLine;
+exports.transformList = transformList;
 const FileInfo_1 = __nccwpck_require__(80202);
 /**
  * This parser is based on the FTP client library source code in Apache Commons Net provided
@@ -23250,7 +23272,6 @@ const RE_LINE = new RegExp("(\\S+)\\s+(\\S+)\\s+" // MM-dd-yy whitespace hh:mma|
 function testLine(line) {
     return /^\d{2}/.test(line) && RE_LINE.test(line);
 }
-exports.testLine = testLine;
 /**
  * Parse a single line of a DOS-style directory listing.
  */
@@ -23276,11 +23297,9 @@ function parseLine(line) {
     file.rawModifiedAt = groups[1] + " " + groups[2];
     return file;
 }
-exports.parseLine = parseLine;
 function transformList(files) {
     return files;
 }
-exports.transformList = transformList;
 
 
 /***/ }),
@@ -23291,7 +23310,10 @@ exports.transformList = transformList;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.parseMLSxDate = exports.transformList = exports.parseLine = exports.testLine = void 0;
+exports.testLine = testLine;
+exports.parseLine = parseLine;
+exports.transformList = transformList;
+exports.parseMLSxDate = parseMLSxDate;
 const FileInfo_1 = __nccwpck_require__(80202);
 function parseSize(value, info) {
     info.size = parseInt(value, 10);
@@ -23300,8 +23322,8 @@ function parseSize(value, info) {
  * Parsers for MLSD facts.
  */
 const factHandlersByName = {
-    "size": parseSize,
-    "sizd": parseSize,
+    "size": parseSize, // File size
+    "sizd": parseSize, // Directory size
     "unique": (value, info) => {
         info.uniqueID = value;
     },
@@ -23404,7 +23426,6 @@ function splitStringOnce(str, delimiter) {
 function testLine(line) {
     return /^\S+=\S+;/.test(line) || line.startsWith(" ");
 }
-exports.testLine = testLine;
 /**
  * Parse single line as MLSD listing, see specification at https://tools.ietf.org/html/rfc3659#section-7.
  */
@@ -23431,7 +23452,6 @@ function parseLine(line) {
     }
     return info;
 }
-exports.parseLine = parseLine;
 function transformList(files) {
     // Create a map of all files that are not symbolic links by their unique ID
     const nonLinksByID = new Map();
@@ -23459,7 +23479,6 @@ function transformList(files) {
     }
     return resolvedFiles;
 }
-exports.transformList = transformList;
 /**
  * Parse date as specified in https://tools.ietf.org/html/rfc3659#section-2.3.
  *
@@ -23476,7 +23495,6 @@ function parseMLSxDate(fact) {
     +fact.slice(15, 18) // Milliseconds
     ));
 }
-exports.parseMLSxDate = parseMLSxDate;
 
 
 /***/ }),
@@ -23487,7 +23505,9 @@ exports.parseMLSxDate = parseMLSxDate;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.transformList = exports.parseLine = exports.testLine = void 0;
+exports.testLine = testLine;
+exports.parseLine = parseLine;
+exports.transformList = transformList;
 const FileInfo_1 = __nccwpck_require__(80202);
 const JA_MONTH = "\u6708";
 const JA_DAY = "\u65e5";
@@ -23564,7 +23584,6 @@ const RE_LINE = new RegExp("([bcdelfmpSs-])" // file type
 function testLine(line) {
     return RE_LINE.test(line);
 }
-exports.testLine = testLine;
 /**
  * Parse a single line of a Unix-style directory listing.
  */
@@ -23622,11 +23641,9 @@ function parseLine(line) {
     }
     return file;
 }
-exports.parseLine = parseLine;
 function transformList(files) {
     return files;
 }
-exports.transformList = transformList;
 function parseMode(r, w, x) {
     let value = 0;
     if (r !== "-") {
@@ -23651,7 +23668,14 @@ function parseMode(r, w, x) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.downloadTo = exports.uploadFrom = exports.connectForPassiveTransfer = exports.parsePasvResponse = exports.enterPassiveModeIPv4 = exports.parseEpsvResponse = exports.enterPassiveModeIPv6 = void 0;
+exports.enterPassiveModeIPv6 = enterPassiveModeIPv6;
+exports.parseEpsvResponse = parseEpsvResponse;
+exports.enterPassiveModeIPv4 = enterPassiveModeIPv4;
+exports.enterPassiveModeIPv4_forceControlHostIP = enterPassiveModeIPv4_forceControlHostIP;
+exports.parsePasvResponse = parsePasvResponse;
+exports.connectForPassiveTransfer = connectForPassiveTransfer;
+exports.uploadFrom = uploadFrom;
+exports.downloadTo = downloadTo;
 const netUtils_1 = __nccwpck_require__(76288);
 const stream_1 = __nccwpck_require__(12781);
 const tls_1 = __nccwpck_require__(24404);
@@ -23672,7 +23696,6 @@ async function enterPassiveModeIPv6(ftp) {
     await connectForPassiveTransfer(controlHost, port, ftp);
     return res;
 }
-exports.enterPassiveModeIPv6 = enterPassiveModeIPv6;
 /**
  * Parse an EPSV response. Returns only the port as in EPSV the host of the control connection is used.
  */
@@ -23689,7 +23712,6 @@ function parseEpsvResponse(message) {
     }
     return port;
 }
-exports.parseEpsvResponse = parseEpsvResponse;
 /**
  * Prepare a data socket using passive mode over IPv4.
  */
@@ -23710,7 +23732,24 @@ async function enterPassiveModeIPv4(ftp) {
     await connectForPassiveTransfer(target.host, target.port, ftp);
     return res;
 }
-exports.enterPassiveModeIPv4 = enterPassiveModeIPv4;
+/**
+ * Prepare a data socket using passive mode over IPv4. Ignore the IP provided by the PASV response,
+ * and use the control host IP. This is the same behaviour as with the more modern variant EPSV. Use
+ * this to fix issues around NAT or provide more security by preventing FTP bounce attacks.
+ */
+async function enterPassiveModeIPv4_forceControlHostIP(ftp) {
+    const res = await ftp.request("PASV");
+    const target = parsePasvResponse(res.message);
+    if (!target) {
+        throw new Error("Can't parse PASV response: " + res.message);
+    }
+    const controlHost = ftp.socket.remoteAddress;
+    if (controlHost === undefined) {
+        throw new Error("Control socket is disconnected, can't get remote address.");
+    }
+    await connectForPassiveTransfer(controlHost, target.port, ftp);
+    return res;
+}
 /**
  * Parse a PASV response.
  */
@@ -23725,7 +23764,6 @@ function parsePasvResponse(message) {
         port: (parseInt(groups[2], 10) & 255) * 256 + (parseInt(groups[3], 10) & 255)
     };
 }
-exports.parsePasvResponse = parsePasvResponse;
 function connectForPassiveTransfer(host, port, ftp) {
     return new Promise((resolve, reject) => {
         let socket = ftp._newSocket();
@@ -23767,7 +23805,6 @@ function connectForPassiveTransfer(host, port, ftp) {
         });
     });
 }
-exports.connectForPassiveTransfer = connectForPassiveTransfer;
 /**
  * Helps resolving/rejecting transfers.
  *
@@ -23892,7 +23929,6 @@ function uploadFrom(source, config) {
         // Ignore all other positive preliminary response codes (< 200)
     });
 }
-exports.uploadFrom = uploadFrom;
 function downloadTo(destination, config) {
     if (!config.ftp.dataSocket) {
         throw new Error("Download will be initiated but no data connection is available.");
@@ -23931,7 +23967,6 @@ function downloadTo(destination, config) {
         // Ignore all other positive preliminary response codes (< 200)
     });
 }
-exports.downloadTo = downloadTo;
 /**
  * Calls a function immediately if a condition is met or subscribes to an event and calls
  * it once the event is emitted.
