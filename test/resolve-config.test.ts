@@ -12,6 +12,7 @@ const requiredInputs = {
 }
 
 const mockReporter: synthetics.MainReporter = {
+  dryRunEnd: jest.fn(),
   error: jest.fn(),
   initErrors: jest.fn(),
   log: jest.fn(),

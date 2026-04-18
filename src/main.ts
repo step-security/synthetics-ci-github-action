@@ -18,7 +18,6 @@ async function validateSubscription(): Promise<void> {
   }
 }
 
-
 const run = async (): Promise<void> => {
   await validateSubscription()
   synthetics.utils.setCiTriggerApp('github_action')

@@ -9,6 +9,25 @@ import {config, EMPTY_SUMMARY} from '../src/fixtures'
 import run from '../src/main'
 import * as fs from 'fs'
 
+// The bundled package exports non-configurable getters, which prevents jest.spyOn
+// from redefining them. This mock copies all properties into a plain writable object.
+jest.mock('@datadog/datadog-ci-plugin-synthetics', () => {
+  const actual = jest.requireActual<typeof synthetics>('@datadog/datadog-ci-plugin-synthetics')
+  const plainUtils: Record<string, unknown> = {}
+  for (const key of Object.keys(actual.utils)) {
+    plainUtils[key] = (actual.utils as Record<string, unknown>)[key]
+  }
+  const mod: Record<string, unknown> = {__esModule: true}
+  for (const key of Object.keys(actual)) {
+    if (key === 'utils') {
+      mod[key] = plainUtils
+    } else {
+      mod[key] = (actual as Record<string, unknown>)[key]
+    }
+  }
+  return mod
+})
+
 const inputs = {
   apiKey: 'xxx',
   appKey: 'yyy',
