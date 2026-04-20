@@ -29,7 +29,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Run Datadog Synthetic tests
-        uses: step-security/synthetics-ci-github-action@v3
+        uses: step-security/synthetics-ci-github-action@v4
         with:
           api-key: ${{secrets.DD_API_KEY}}
           app-key: ${{secrets.DD_APP_KEY}}
@@ -49,7 +49,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Run Datadog Synthetic tests
-        uses: step-security/synthetics-ci-github-action@v3
+        uses: step-security/synthetics-ci-github-action@v4
         with:
           api-key: ${{secrets.DD_API_KEY}}
           app-key: ${{secrets.DD_APP_KEY}}
@@ -72,7 +72,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Run Datadog Synthetic tests
-        uses: step-security/synthetics-ci-github-action@v3
+        uses: step-security/synthetics-ci-github-action@v4
         with:
           api-key: ${{secrets.DD_API_KEY}}
           app-key: ${{secrets.DD_APP_KEY}}
@@ -90,7 +90,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Run Datadog Synthetic tests
-        uses: step-security/synthetics-ci-github-action@v3
+        uses: step-security/synthetics-ci-github-action@v4
         with:
           api-key: ${{secrets.DD_API_KEY}}
           app-key: ${{secrets.DD_APP_KEY}}
@@ -111,7 +111,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Run Datadog Synthetic tests
-        uses: step-security/synthetics-ci-github-action@v3
+        uses: step-security/synthetics-ci-github-action@v4
         with:
           api-key: ${{secrets.DD_API_KEY}}
           app-key: ${{secrets.DD_APP_KEY}}
