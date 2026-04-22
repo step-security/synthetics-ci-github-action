@@ -1,6 +1,6 @@
 {
   "name": "datadog-synthetics-github-action",
-  "version": "3.8.2",
+  "version": "4.0.0",
   "author": "step-security",
   "license": "Apache-2.0",
   "description": "Run Datadog Synthetics CI tests as part of your Github Actions workflow",
@@ -26,7 +26,7 @@
     "test"
   ],
   "engines": {
-    "node": "20.11.0"
+    "node": "24.13.0"
   },
   "packageManager": "yarn@3.4.1",
   "dependencies": {
