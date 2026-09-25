@@ -3,7 +3,6 @@ import * as synthetics from '@datadog/datadog-ci-plugin-synthetics'
 export const config = synthetics.DEFAULT_COMMAND_CONFIG
 
 export const mockReporter: synthetics.MainReporter = {
-  dryRunEnd: jest.fn(),
   error: jest.fn(),
   initErrors: jest.fn(),
   log: jest.fn(),
@@ -14,6 +13,7 @@ export const mockReporter: synthetics.MainReporter = {
   testTrigger: jest.fn(),
   testWait: jest.fn(),
   testsWait: jest.fn(),
+  dryRunEnd: jest.fn(),
 }
 
 export const EMPTY_SUMMARY: synthetics.Summary = {
