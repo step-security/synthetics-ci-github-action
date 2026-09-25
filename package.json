@@ -1,6 +1,6 @@
 {
   "name": "datadog-synthetics-github-action",
-  "version": "4.0.0",
+  "version": "4.1.1",
   "author": "step-security",
   "license": "Apache-2.0",
   "description": "Run Datadog Synthetics CI tests as part of your Github Actions workflow",
@@ -31,13 +31,13 @@
   "packageManager": "yarn@3.4.1",
   "dependencies": {
     "@actions/core": "^1.11.1",
-    "@datadog/datadog-ci": "^5.13.0",
-    "@datadog/datadog-ci-plugin-synthetics": "^5.13.0",
+    "@datadog/datadog-ci": "^5.22.1",
+    "@datadog/datadog-ci-plugin-synthetics": "^5.22.1",
     "axios": "^1.13.4",
     "deep-extend": "0.6.0"
   },
   "devDependencies": {
-    "@types/deep-extend": "0.4.32",
+    "@types/deep-extend": "0.6.2",
     "@types/jest": "^29.5.8",
     "@types/node": "^24.5.2",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
