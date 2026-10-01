@@ -1,6 +1,13 @@
 import * as core from '@actions/core'
-import * as synthetics from '@datadog/datadog-ci-plugin-synthetics'
+import type * as synthetics from '@datadog/datadog-ci-plugin-synthetics'
 import {expect, test} from '@jest/globals'
+
+jest.mock('@datadog/datadog-ci-plugin-synthetics', () => {
+  const original = jest.requireActual('@datadog/datadog-ci-plugin-synthetics') as typeof synthetics
+  return {...original, utils: {...original.utils}}
+})
+
+const syntheticsMock = require('@datadog/datadog-ci-plugin-synthetics') as typeof synthetics
 
 import {execFile} from 'child_process'
 import * as path from 'path'
@@ -8,25 +15,6 @@ import * as path from 'path'
 import {config, EMPTY_SUMMARY} from '../src/fixtures'
 import run from '../src/main'
 import * as fs from 'fs'
-
-// The bundled package exports non-configurable getters, which prevents jest.spyOn
-// from redefining them. This mock copies all properties into a plain writable object.
-jest.mock('@datadog/datadog-ci-plugin-synthetics', () => {
-  const actual = jest.requireActual<typeof synthetics>('@datadog/datadog-ci-plugin-synthetics')
-  const plainUtils: Record<string, unknown> = {}
-  for (const key of Object.keys(actual.utils)) {
-    plainUtils[key] = (actual.utils as Record<string, unknown>)[key]
-  }
-  const mod: Record<string, unknown> = {__esModule: true}
-  for (const key of Object.keys(actual)) {
-    if (key === 'utils') {
-      mod[key] = plainUtils
-    } else {
-      mod[key] = (actual as Record<string, unknown>)[key]
-    }
-  }
-  return mod
-})
 
 const inputs = {
   apiKey: 'xxx',
@@ -47,7 +35,7 @@ describe('Run Github Action', () => {
 
     jest.spyOn(process.stdout, 'write').mockImplementation()
     jest.spyOn(core, 'setFailed').mockImplementation()
-    jest.spyOn(synthetics.utils, 'getOrgSettings').mockImplementation()
+    jest.spyOn(syntheticsMock.utils, 'getOrgSettings').mockImplementation()
   })
 
   describe('Handle input parameters', () => {
@@ -81,10 +69,10 @@ describe('Run Github Action', () => {
     })
 
     test('Github Action core.getInput parameters are passed on to runTests', async () => {
-      jest.spyOn(synthetics, 'executeTests').mockImplementation()
+      jest.spyOn(syntheticsMock, 'executeTests').mockImplementation()
 
       await run()
-      expect(synthetics.executeTests).toHaveBeenCalledWith(expect.anything(), {
+      expect(syntheticsMock.executeTests).toHaveBeenCalledWith(expect.anything(), {
         ...config,
         ...inputs,
       })
@@ -96,10 +84,10 @@ describe('Run Github Action', () => {
         ...process.env,
         'INPUT_PUBLIC-IDS': publicIds.join(', '),
       }
-      jest.spyOn(synthetics, 'executeTests').mockImplementation()
+      jest.spyOn(syntheticsMock, 'executeTests').mockImplementation()
 
       await run()
-      expect(synthetics.executeTests).toHaveBeenCalledWith(expect.anything(), {
+      expect(syntheticsMock.executeTests).toHaveBeenCalledWith(expect.anything(), {
         ...config,
         ...inputs,
         publicIds,
@@ -112,10 +100,10 @@ describe('Run Github Action', () => {
         INPUT_VARIABLES: 'START_URL=https://example.org,MY_VARIABLE=My title',
       }
 
-      jest.spyOn(synthetics, 'executeTests').mockImplementation()
+      jest.spyOn(syntheticsMock, 'executeTests').mockImplementation()
 
       await run()
-      expect(synthetics.executeTests).toHaveBeenCalledWith(expect.anything(), {
+      expect(syntheticsMock.executeTests).toHaveBeenCalledWith(expect.anything(), {
         ...config,
         ...inputs,
         defaultTestOverrides: {
@@ -136,13 +124,13 @@ describe('Run Github Action', () => {
         'INPUT_JUNIT-REPORT': 'reports/TEST-1.xml',
       }
 
-      jest.spyOn(synthetics, 'executeTests').mockResolvedValue({
+      jest.spyOn(syntheticsMock, 'executeTests').mockResolvedValue({
         results: [],
         summary: EMPTY_SUMMARY,
       })
 
       await run()
-      expect(synthetics.executeTests).toHaveBeenCalledWith(expect.anything(), {
+      expect(syntheticsMock.executeTests).toHaveBeenCalledWith(expect.anything(), {
         ...config,
         ...inputs,
       })
@@ -155,9 +143,9 @@ describe('Run Github Action', () => {
 
   describe('Handle invalid input parameters', () => {
     test('Use default configuration if Github Action input is not set', async () => {
-      jest.spyOn(synthetics, 'executeTests').mockImplementation()
+      jest.spyOn(syntheticsMock, 'executeTests').mockImplementation()
       await run()
-      expect(synthetics.executeTests).toHaveBeenCalledWith(expect.anything(), {
+      expect(syntheticsMock.executeTests).toHaveBeenCalledWith(expect.anything(), {
         ...config,
         ...inputs,
         datadogSite: 'datadoghq.com',
@@ -181,13 +169,13 @@ describe('Run Github Action', () => {
   describe('Handle Synthetics test results', () => {
     beforeEach(() => {
       // renderResults() does side effects on the summary: mocking it for easier testing.
-      jest.spyOn(synthetics.utils, 'renderResults').mockImplementation()
+      jest.spyOn(syntheticsMock.utils, 'renderResults').mockImplementation()
     })
 
     test('Github Action fails if Synthetics tests fail', async () => {
       const setFailedMock = jest.spyOn(core, 'setFailed')
 
-      jest.spyOn(synthetics, 'executeTests').mockResolvedValue({
+      jest.spyOn(syntheticsMock, 'executeTests').mockResolvedValue({
         results: [{passed: false, test: {public_id: 'aaa-bbb-ccc'}, result: {}} as synthetics.Result],
         summary: {...EMPTY_SUMMARY, failed: 1},
       })
@@ -202,7 +190,7 @@ describe('Run Github Action', () => {
     test('Github Action fails if Synthetics tests timed out and config.failOnTimeout = true', async () => {
       const setFailedMock = jest.spyOn(core, 'setFailed')
 
-      jest.spyOn(synthetics, 'executeTests').mockResolvedValue({
+      jest.spyOn(syntheticsMock, 'executeTests').mockResolvedValue({
         // `config.failOnTimeout = true` makes `passed` be false.
         results: [{passed: false, timedOut: true, test: {public_id: 'aaa-bbb-ccc'}, result: {}} as synthetics.Result],
         summary: {...EMPTY_SUMMARY, timedOut: 1},
@@ -219,7 +207,7 @@ describe('Run Github Action', () => {
       const setFailedMock = jest.spyOn(core, 'setFailed')
       const infoMock = jest.spyOn(core, 'info')
 
-      jest.spyOn(synthetics, 'executeTests').mockResolvedValue({
+      jest.spyOn(syntheticsMock, 'executeTests').mockResolvedValue({
         // `config.failOnTimeout = false` makes `passed` be true.
         results: [{passed: true, timedOut: true, test: {public_id: 'aaa-bbb-ccc'}, result: {}} as synthetics.Result],
         summary: {...EMPTY_SUMMARY, timedOut: 1},
@@ -236,7 +224,7 @@ describe('Run Github Action', () => {
     test('Github Action succeeds if Synthetics tests not found with failOnMissingTests = false', async () => {
       const infoMock = jest.spyOn(core, 'info')
 
-      jest.spyOn(synthetics, 'executeTests').mockResolvedValue({
+      jest.spyOn(syntheticsMock, 'executeTests').mockResolvedValue({
         results: [],
         summary: {...EMPTY_SUMMARY, testsNotFound: new Set(['unk-now-nid'])},
       })
@@ -251,7 +239,7 @@ describe('Run Github Action', () => {
     test('Github Action succeeds if Synthetics tests do not fail', async () => {
       const setFailedMock = jest.spyOn(core, 'setFailed')
 
-      jest.spyOn(synthetics, 'executeTests').mockResolvedValue({
+      jest.spyOn(syntheticsMock, 'executeTests').mockResolvedValue({
         results: [],
         summary: {...EMPTY_SUMMARY, passed: 1},
       })

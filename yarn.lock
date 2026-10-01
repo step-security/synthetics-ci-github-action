@@ -485,19 +485,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@datadog/datadog-ci-plugin-synthetics@npm:^5.13.0":
-  version: 5.13.1
-  resolution: "@datadog/datadog-ci-plugin-synthetics@npm:5.13.1"
-  checksum: 469689e175a713fb92f243650ee24ec1d386ab2548253e6db09a3cc1af26db95cc5230778f8f3fe28c0dac18aacd34808a9713a667dc0254e112e1c60de6b02d
+"@datadog/datadog-ci-plugin-synthetics@npm:^5.22.1":
+  version: 5.24.1
+  resolution: "@datadog/datadog-ci-plugin-synthetics@npm:5.24.1"
+  checksum: 8bc3f5e053b76396409bb19b79c1a6e1001ab0fd78f955fcb03fbce71c43a69abd80d59339290dab28d6799e409605acea2809d01dedd81e58f67bfc15d48ec8
   languageName: node
   linkType: hard
 
-"@datadog/datadog-ci@npm:^5.13.0":
-  version: 5.13.1
-  resolution: "@datadog/datadog-ci@npm:5.13.1"
+"@datadog/datadog-ci@npm:^5.22.1":
+  version: 5.24.1
+  resolution: "@datadog/datadog-ci@npm:5.24.1"
   bin:
     datadog-ci: dist/bundle.js
-  checksum: 894e2eebecea02d659344a4d30080fb15f361cdf3697b9773db41996910a5275a9b5900e1386e1542a7686cb042184d5085c91b8661bdd1b18094c65d53bddc0
+  checksum: 2100ee9063d56d104e21301c764f5b42b560e02d9841dfbb258944eecb063452f49bee0cd27c774e723705414e3b7ae7555f25714225bf7649136b43424ae2b1
   languageName: node
   linkType: hard
 
@@ -1021,10 +1021,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/deep-extend@npm:0.4.32":
-  version: 0.4.32
-  resolution: "@types/deep-extend@npm:0.4.32"
-  checksum: 81865a51bc302d11a18ba0ddce3537d30cb9ecdf8b212b0bdf75f1156b2d01af5f7762f74bc3be24092ec1664b27ae4b07deb19c263f6472d83fffc7381d2c79
+"@types/deep-extend@npm:0.6.2":
+  version: 0.6.2
+  resolution: "@types/deep-extend@npm:0.6.2"
+  checksum: 16da22923b4b1375f23888c4c28d1fa962a489ea40457a2135833831dbe4870a75894d29b632680dd2bcdb72a0a5c214f5286483f3f70ba10d52f3c816b5abd7
   languageName: node
   linkType: hard
 
@@ -1843,9 +1843,9 @@ __metadata:
   resolution: "datadog-synthetics-github-action@workspace:."
   dependencies:
     "@actions/core": ^1.11.1
-    "@datadog/datadog-ci": ^5.13.0
-    "@datadog/datadog-ci-plugin-synthetics": ^5.13.0
-    "@types/deep-extend": 0.4.32
+    "@datadog/datadog-ci": ^5.22.1
+    "@datadog/datadog-ci-plugin-synthetics": ^5.22.1
+    "@types/deep-extend": 0.6.2
     "@types/jest": ^29.5.8
     "@types/node": ^24.5.2
     "@typescript-eslint/eslint-plugin": ^5.62.0
