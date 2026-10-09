@@ -12,7 +12,6 @@ const requiredInputs = {
 }
 
 const mockReporter: synthetics.MainReporter = {
-  dryRunEnd: jest.fn(),
   error: jest.fn(),
   initErrors: jest.fn(),
   log: jest.fn(),
@@ -23,6 +22,7 @@ const mockReporter: synthetics.MainReporter = {
   testTrigger: jest.fn(),
   testWait: jest.fn(),
   testsWait: jest.fn(),
+  dryRunEnd: jest.fn(),
 }
 
 describe('Resolves Config', () => {
