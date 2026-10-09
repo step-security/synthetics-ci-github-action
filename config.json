@@ -1,0 +1,17 @@
+{
+  "$comment": "Managed automatically when syncing with upstream. Do not edit by hand.",
+  "schema_version": 1,
+  "onboarding_type": "copied",
+  "action_type": "node",
+  "upstream": {
+    "repository": "DataDog/synthetics-ci-github-action",
+    "synced_tag": "v4.1.1",
+    "synced_commit": "7039855343386c30068a97ca381e68ea405e8539",
+    "archived": false
+  },
+  "build": {
+    "package_manager": "yarn@3.4.1",
+    "node_version": "24",
+    "script": "all"
+  }
+}

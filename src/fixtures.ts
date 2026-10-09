@@ -14,6 +14,7 @@ export const mockReporter: synthetics.MainReporter = {
   testTrigger: jest.fn(),
   testWait: jest.fn(),
   testsWait: jest.fn(),
+  dryRunEnd: jest.fn(),
 }
 
 export const EMPTY_SUMMARY: synthetics.Summary = {

@@ -485,19 +485,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@datadog/datadog-ci-plugin-synthetics@npm:^5.13.0":
-  version: 5.13.1
-  resolution: "@datadog/datadog-ci-plugin-synthetics@npm:5.13.1"
-  checksum: 469689e175a713fb92f243650ee24ec1d386ab2548253e6db09a3cc1af26db95cc5230778f8f3fe28c0dac18aacd34808a9713a667dc0254e112e1c60de6b02d
+"@datadog/datadog-ci-plugin-synthetics@npm:^5.22.1":
+  version: 5.25.0
+  resolution: "@datadog/datadog-ci-plugin-synthetics@npm:5.25.0"
+  checksum: b444f7c37b34ac1fb3753ce043c096dde42b46af2789446e2e70a3712a22479b265d039c9733b570f0ef539ff615350828b7068428fc4d81f9c704bdcdea8c7e
   languageName: node
   linkType: hard
 
-"@datadog/datadog-ci@npm:^5.13.0":
-  version: 5.13.1
-  resolution: "@datadog/datadog-ci@npm:5.13.1"
+"@datadog/datadog-ci@npm:^5.22.1":
+  version: 5.25.0
+  resolution: "@datadog/datadog-ci@npm:5.25.0"
   bin:
     datadog-ci: dist/bundle.js
-  checksum: 894e2eebecea02d659344a4d30080fb15f361cdf3697b9773db41996910a5275a9b5900e1386e1542a7686cb042184d5085c91b8661bdd1b18094c65d53bddc0
+  checksum: d6f93c844c1e985cdb12fb8e389b9d0a11ea71dcbcc279e03ef09df4e9d6667c84bb6b6a69f1eeaf314f1a314a6bc429f49ca43a937be6e799c916678cf19029
   languageName: node
   linkType: hard
 
@@ -980,6 +980,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@step-security/datadog-synthetics-github-action@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "@step-security/datadog-synthetics-github-action@workspace:."
+  dependencies:
+    "@actions/core": ^1.11.1
+    "@datadog/datadog-ci": ^5.22.1
+    "@datadog/datadog-ci-plugin-synthetics": ^5.22.1
+    "@types/deep-extend": 0.6.2
+    "@types/jest": ^29.5.8
+    "@types/node": ^24.5.2
+    "@typescript-eslint/eslint-plugin": ^5.62.0
+    "@typescript-eslint/parser": ^5.3.0
+    "@vercel/ncc": ^0.38.1
+    axios: ^1.20.0
+    deep-extend: 0.6.0
+    eslint: ^8.39.0
+    eslint-plugin-jest: ^25.2.2
+    jest: ^29.7.0
+    prettier: 2.4.1
+    ts-jest: ^29.1.1
+    typescript: ^5.9.2
+  languageName: unknown
+  linkType: soft
+
 "@types/babel__core@npm:^7.1.14":
   version: 7.1.16
   resolution: "@types/babel__core@npm:7.1.16"
@@ -1021,10 +1045,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/deep-extend@npm:0.4.32":
-  version: 0.4.32
-  resolution: "@types/deep-extend@npm:0.4.32"
-  checksum: 81865a51bc302d11a18ba0ddce3537d30cb9ecdf8b212b0bdf75f1156b2d01af5f7762f74bc3be24092ec1664b27ae4b07deb19c263f6472d83fffc7381d2c79
+"@types/deep-extend@npm:0.6.2":
+  version: 0.6.2
+  resolution: "@types/deep-extend@npm:0.6.2"
+  checksum: 16da22923b4b1375f23888c4c28d1fa962a489ea40457a2135833831dbe4870a75894d29b632680dd2bcdb72a0a5c214f5286483f3f70ba10d52f3c816b5abd7
   languageName: node
   linkType: hard
 
@@ -1445,7 +1469,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.13.4":
+"axios@npm:^1.20.0":
   version: 1.20.0
   resolution: "axios@npm:1.20.0"
   dependencies:
@@ -1837,30 +1861,6 @@ __metadata:
   checksum: 8d306efacaf6f3f60e0224c287664093fa9185680b2d195852ba9a863f85d02dcc737094c6e512175f8ee0161f9b87c73c6826034c2422e39de7d6569cf4503b
   languageName: node
   linkType: hard
-
-"datadog-synthetics-github-action@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "datadog-synthetics-github-action@workspace:."
-  dependencies:
-    "@actions/core": ^1.11.1
-    "@datadog/datadog-ci": ^5.13.0
-    "@datadog/datadog-ci-plugin-synthetics": ^5.13.0
-    "@types/deep-extend": 0.4.32
-    "@types/jest": ^29.5.8
-    "@types/node": ^24.5.2
-    "@typescript-eslint/eslint-plugin": ^5.62.0
-    "@typescript-eslint/parser": ^5.3.0
-    "@vercel/ncc": ^0.38.1
-    axios: ^1.13.4
-    deep-extend: 0.6.0
-    eslint: ^8.39.0
-    eslint-plugin-jest: ^25.2.2
-    jest: ^29.7.0
-    prettier: 2.4.1
-    ts-jest: ^29.1.1
-    typescript: ^5.9.2
-  languageName: unknown
-  linkType: soft
 
 "debug@npm:4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.2, debug@npm:^4.3.4":
   version: 4.4.1
