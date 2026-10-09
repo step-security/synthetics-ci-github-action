@@ -15,14 +15,12 @@ async function validateSubscription(): Promise<void> {
 
   const upstream = 'DataDog/synthetics-ci-github-action'
   const action = process.env.GITHUB_ACTION_REPOSITORY
-  const docsUrl =
-    'https://docs.stepsecurity.io/actions/stepsecurity-maintained-actions'
+  const docsUrl = 'https://docs.stepsecurity.io/actions/stepsecurity-maintained-actions'
 
   core.info('')
   core.info('[1;36mStepSecurity Maintained Action[0m')
   core.info(`Secure drop-in replacement for ${upstream}`)
-  if (repoPrivate === false)
-    core.info('[32m✓ Free for public repositories[0m')
+  if (repoPrivate === false) core.info('[32m✓ Free for public repositories[0m')
   core.info(`[36mLearn more:[0m ${docsUrl}`)
   core.info('')
 
@@ -39,12 +37,8 @@ async function validateSubscription(): Promise<void> {
     )
   } catch (error) {
     if (isAxiosError(error) && error.response?.status === 403) {
-      core.error(
-        `[1;31mThis action requires a StepSecurity subscription for private repositories.[0m`
-      )
-      core.error(
-        `[31mLearn how to enable a subscription: ${docsUrl}[0m`
-      )
+      core.error(`[1;31mThis action requires a StepSecurity subscription for private repositories.[0m`)
+      core.error(`[31mLearn how to enable a subscription: ${docsUrl}[0m`)
       process.exit(1)
     }
     core.info('Timeout or API not reachable. Continuing to next step.')
